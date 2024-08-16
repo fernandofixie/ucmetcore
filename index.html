@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Open Reporting</title>
+  </head>
+  <body>
+    <h1>Open Reporting</h1>
+    <form id="reportForm">
+      <input type="text" id="reportTitle" placeholder="Report Title" required />
+      <textarea
+        id="reportContent"
+        placeholder="Report Content"
+        required
+      ></textarea>
+      <button type="submit">Submit Report</button>
+    </form>
+    <h2>Submitted Reports</h2>
+    <div id="reports"></div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        onSnapshot,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAs12jBgiv1PUn57cGNi0sZ6bhOpn1ULvU",
+        authDomain: "ucmetcore.firebaseapp.com",
+        projectId: "ucmetcore",
+        storageBucket: "ucmetcore.appspot.com",
+        messagingSenderId: "526791264051",
+        appId: "1:526791264051:web:33a255b0d660b8f17aa046",
+        measurementId: "G-ZNZ7LLHQRN",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Handle form submission
+      document
+        .getElementById("reportForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault(); // Prevent form from refreshing the page
+
+          // Get the form data
+          const title = document.getElementById("reportTitle").value;
+          const content = document.getElementById("reportContent").value;
+
+          try {
+            // Save the report data to Firebase
+            await addDoc(collection(db, "reports"), {
+              title: title,
+              content: content,
+              timestamp: new Date(),
+            });
+            console.log("Report submitted successfully");
+          } catch (error) {
+            console.error("Error submitting report:", error);
+          }
+
+          // Clear the form
+          document.getElementById("reportForm").reset();
+        });
+
+      // Fetch and display reports
+      const q = query(collection(db, "reports"), orderBy("timestamp", "desc"));
+      onSnapshot(q, (snapshot) => {
+        let reportsHtml = "";
+        snapshot.forEach((doc) => {
+          const report = doc.data();
+          reportsHtml += `
+            <div>
+              <h3>${report.title}</h3>
+              <p>${report.content}</p>
+              <small>${report.timestamp.toLocaleString()}</small>
+            </div>
+          `;
+        });
+        document.getElementById("reports").innerHTML = reportsHtml;
+      });
+    </script>
+  </body>
+</html>
